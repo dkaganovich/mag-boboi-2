@@ -41,6 +41,7 @@ int main(int argc, char** argv)
     int* strip = (int*)malloc(sizeof(int) * BLOCKDIM_Y__LOCAL * M);
 
     if (world_rank == 0) {
+        MPI_Request req = MPI_REQUEST_NULL;
         for (int i = 0; i < M; i += BLOCKDIM_X) {
             for (int j = 0; j < BLOCKDIM_Y__LOCAL; ++j) {
                 for (int k = i; k < i + BLOCKDIM_X && k < M; ++k) {
@@ -48,7 +49,7 @@ int main(int argc, char** argv)
                 }
             }
             if (world_size > 1) {
-                MPI_Request req;
+                MPI_Wait(&req, MPI_STATUS_IGNORE);
                 MPI_Isend(strip + (BLOCKDIM_Y__LOCAL - HOLLOW_TOP) * M + i, 1, M - i < BLOCKDIM_X ? block_gap_x_t : block_base_t, 1, 42, MPI_COMM_WORLD, &req);
             }
         }

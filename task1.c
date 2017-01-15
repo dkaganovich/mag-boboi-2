@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
             MPI_Get_count(&status, MPI_INT, &msg_size);
 
             buf[status.MPI_SOURCE] = (int*)malloc(sizeof(int) * msg_size);
-            MPI_Recv(*(buf + status.MPI_SOURCE), msg_size, MPI_INT, MPI_ANY_SOURCE, 42, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(*(buf + status.MPI_SOURCE), msg_size, MPI_INT, status.MPI_SOURCE, 42, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
             fprintf(stderr, "Message received (%d): size = %d: \n", status.MPI_SOURCE, msg_size);
             for (int j = 0; j < msg_size; ++j) {
