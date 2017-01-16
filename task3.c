@@ -72,21 +72,21 @@ int main(int argc, char** argv)
         fill_random(a, n, n);
         fill_random(b, n, n);
 
-        log = fopen("check", "w");
-        for (int i = 0; i < n; ++i)
-        {
-            for (int j = 0; j < n; ++j)
-            {
-                c[i * n + j] = 0;
-                for (int k = 0; k < n; ++k)
-                {
-                    c[i * n + j] += a[i * n + k] * b[k * n + j];
-                }
-                fprintf(log, "%f ", c[i * n + j]);
-            }
-            fprintf(log, "\n");
-        }
-        fclose(log);
+        // log = fopen("check", "w");
+        // for (int i = 0; i < n; ++i)
+        // {
+        //     for (int j = 0; j < n; ++j)
+        //     {
+        //         c[i * n + j] = 0;
+        //         for (int k = 0; k < n; ++k)
+        //         {
+        //             c[i * n + j] += a[i * n + k] * b[k * n + j];
+        //         }
+        //         fprintf(log, "%f ", c[i * n + j]);
+        //     }
+        //     fprintf(log, "\n");
+        // }
+        // fclose(log);
         
         log = fopen("a", "w");
         dump_matrix(a, n, n, log);// output 'a'
