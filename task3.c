@@ -71,6 +71,22 @@ int main(int argc, char** argv)
 
         fill_random(a, n, n);
         fill_random(b, n, n);
+
+        log = fopen("check", "w");
+        for (int i = 0; i < n; ++i)
+        {
+            for (int j = 0; j < n; ++j)
+            {
+                c[i * n + j] = 0;
+                for (int k = 0; k < n; ++k)
+                {
+                    c[i * n + j] += a[i * n + k] * b[k * n + j];
+                }
+                fprintf(log, "%f ", c[i * n + j]);
+            }
+            fprintf(log, "\n");
+        }
+        fclose(log);
         
         log = fopen("a", "w");
         dump_matrix(a, n, n, log);// output 'a'
@@ -93,24 +109,29 @@ int main(int argc, char** argv)
     free(b);
 
     // run calcs
-    MPI_Request req = MPI_REQUEST_NULL;
+    MPI_Request req[] = {MPI_REQUEST_NULL, MPI_REQUEST_NULL};
     double* swap_b = (double*) malloc(sizeof(double) * local_dim * n);// extra buffer to overlap comms with calcs
     double* _send_b;
     double* _recv_b;
     for (int step = 0; step < world_size; ++step) 
     {
-        MPI_Wait(&req, MPI_STATUS_IGNORE);
         _recv_b = (step % 2 == 0 ? swap_b : local_b);
+        _send_b = (step % 2 == 0 ? local_b : swap_b);
+        
+        MPI_Waitall(2, req, MPI_STATUS_IGNORE);
 
         if (step < world_size - 1) {
             MPI_Irecv(_recv_b, 
                 local_dim * n, 
                 MPI_DOUBLE, 
                 world_rank < world_size - 1 ? world_rank + 1 : 0, 
-                42, MPI_COMM_WORLD, &req);
+                42, MPI_COMM_WORLD, req);
+            MPI_Isend(_send_b, 
+                local_dim * n, 
+                MPI_DOUBLE, 
+                world_rank > 0 ? world_rank - 1 : world_size - 1, 
+                42, MPI_COMM_WORLD, req + 1);
         }
-
-        _send_b = (step % 2 == 0 ? local_b : swap_b);
 
         int displ = local_dim * ((world_rank + step) % world_size);
         for (int i = 0; i < local_dim; ++i) {
@@ -123,14 +144,6 @@ int main(int argc, char** argv)
                     local_c[displ + i * n + j] += local_a[i * n + k] * _send_b[k * local_dim + j];
                 }
             }
-        }
-
-        if (step < world_size - 1) {
-            MPI_Send(_send_b, 
-                local_dim * n, 
-                MPI_DOUBLE, 
-                world_rank > 0 ? world_rank - 1 : world_size - 1, 
-                42, MPI_COMM_WORLD);
         }
     }
 
